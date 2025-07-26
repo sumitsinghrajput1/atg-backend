@@ -1,0 +1,38 @@
+1. test and make valdation in each api and proivde security features like rate limit  FOR TOMMOROW..(DO THIS FIRST...) ADMIN
+2. --- may be we can proivde lesser info in  get alll product -->> no need..
+3. ---  add multer and cloudinary in image upload. -->> will think of another solution too may bee vps
+4. --- get the products on the basis of tags (for product details page --> u may also like) can be worked by get all with filters -->> get all done
+5. add to cart and all cart logic and Order logic. 2ND MAY BE TOMMOROW
+6. payment integration with most security.
+7. Test all apis and provide auth and valdiation specailly for admin side use secreta and other things like cors , ip  , etc.
+8. coupans and offers api and logic remaining. will apply at end.
+
+2 days more  thrusday , friday --> backend for both dashboard and ecomerce 
+sat sunday all frontend of ecommerce.
+70 percent paisa... till 6.. in testting till 10 july..
+
+dashboard will be ready --> crud product , categories ---> till 10 , others till next weekend.
+
+SECURITY --> SQL IJNECTIONS AND OTHER ATTACKS END..
+
+get all requests cache to make faster --> redis or memeorty cache will work..
+OTP CLEAR SERVICE
+
+
+
+APIs ready
+- product ---> done good to go PL
+- tags ---> done PL
+- category ---> done PL
+- Order  --> done all
+- cart  -->
+- offers  --> hold
+- coupons --> done
+- Users  -->done
+- dashboard
+
+TODO: 1. validation and testing deep and cache. one whole day
+
+
+local-user
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODdlNzMyY2FkNWExYjNiMDViMDZmZjkiLCJpYXQiOjE3NTMxMTc0ODQsImV4cCI6MTc1MzcyMjI4NH0.FvcZHYhssMbKWhxpkAuYY3Is6IcxgqGUGCMnD1C6LxU
