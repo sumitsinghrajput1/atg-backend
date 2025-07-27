@@ -1,8 +1,8 @@
-<!-- templates/otp-email.html -->
+<!-- otp-email.html -->
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>All That Glitters – OTP Verification</title>
+    <title>All That Glitters - OTP Verification</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
       body { margin: 0; padding: 0; background: #fdf2f8; color: #3a174c; }
@@ -99,7 +99,7 @@
         <div class="header-sub">Admin Portal Secure Access</div>
       </div>
       <div class="content">
-        <div class="greeting">Welcome back{{userName ? ', ' + userName : ''}}!</div>
+        <div class="greeting">Welcome back, {{userName}}!</div>
         <div class="message">
           To continue to your dashboard, please use the One-Time Password below to verify your identity.
         </div>
@@ -113,7 +113,7 @@
         </div>
       </div>
       <div class="footer">
-        &copy; {{year || new Date().getFullYear()}} All That Glitters &mdash; Your security is our priority.
+        &copy; {{year}} All That Glitters &mdash; Your security is our priority.
       </div>
     </div>
   </body>
