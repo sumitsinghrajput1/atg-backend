@@ -23,8 +23,13 @@ import adminRoutes from './routes/admin'
 
 const app: Application = express();
 
+const allowedOrigins = [
+  "http://localhost:8080", // or 8080, depending on your dev environment
+  "https://frabjous-hummingbird-09b12e.netlify.app"
+];
+
 app.use(cors({
-  origin: ["http://localhost:8080", "frabjous-hummingbird-09b12e.netlify.app"], // ✅ Correct way
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
