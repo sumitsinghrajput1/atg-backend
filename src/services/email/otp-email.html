@@ -1,27 +1,120 @@
 <!-- templates/otp-email.html -->
 <html>
   <head>
+    <meta charset="UTF-8" />
+    <title>All That Glitters – OTP Verification</title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+      body { margin: 0; padding: 0; background: #fdf2f8; color: #3a174c; }
+      .card {
+        max-width: 520px;
+        margin: 48px auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 28px 0 rgba(236,72,153,.07), 0 1.5px 8px 0 rgba(0,0,0,0.04);
+        font-family: 'Inter', Arial, sans-serif;
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(90deg, #ec4899 20%, #f472b6 100%);
+        padding: 40px 0 20px 0;
+        text-align: center;
+        color: #fff;
+      }
+      .header-logo {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        margin-bottom: 0;
+      }
+      .header-sub {
+        font-size: 17px;
+        font-weight: 400;
+        color: #ffd1eb;
+        margin-bottom: 0;
+      }
+      .content {
+        padding: 36px 36px 8px 36px;
+      }
+      .greeting {
+        font-size: 19px;
+        font-weight: 600;
+        margin: 0 0 13px 0;
+      }
+      .message {
+        font-size: 15.5px;
+        margin: 0 0 18px 0;
+        color: #642545;
+      }
+      .otp-box {
+        background: #fdf1fa;
+        border-left: 5px solid #ec4899;
+        border-radius: 8px;
+        margin: 16px auto 12px;
+        width: max-content;
+        padding: 19px 36px;
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: #ec4899;
+        letter-spacing: 6px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(236,72,153,0.07);
+      }
+      .warning {
+        background: #f9a8d4;
+        padding: 11px 18px;
+        border-radius: 7px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #481947;
+        margin: 14px 0 0 0;
+      }
+      .note {
+        font-size: 13.5px;
+        color: #988698;
+        text-align: right;
+        padding: 0 8px 0 0;
+        margin-top: 13px;
+      }
+      .footer {
+        background: #fff0f6;
+        color: #c0266d;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 22px 0 20px 0;
+        letter-spacing: 0.7px;
+      }
+      @media (max-width: 600px) {
+        .card { max-width: 96%; }
+        .content { padding: 22px 10px 8px 10px; }
+        .otp-box { padding: 14px 9vw; font-size: 7vw; }
+      }
     </style>
   </head>
-  <body style="margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: #f4f4f4; color: #333;">
-    <table align="center" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-      <tr>
-        <td style="background-color: {{brandColor}}; padding: 24px; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px; color: #ffffff;">RewardHub</h1>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding: 24px;">
-          <p style="font-size: 16px;">Hello <strong>{{userName}}</strong>,</p>
-          <p style="font-size: 15px; line-height: 1.6;">
-            Your OTP to verify your account is:
-          </p>
-          <p style="font-size: 28px; text-align: center; font-weight: bold; color: {{brandColor}};">{{otp}}</p>
-          <p style="font-size: 14px; color: #777;">This OTP is valid for 10 minutes.</p>
-        </td>
-      </tr>
-    </table>
+  <body>
+    <div class="card">
+      <div class="header">
+        <div class="header-logo">All That Glitters</div>
+        <div class="header-sub">Admin Portal Secure Access</div>
+      </div>
+      <div class="content">
+        <div class="greeting">Welcome back{{userName ? ', ' + userName : ''}}!</div>
+        <div class="message">
+          To continue to your dashboard, please use the One-Time Password below to verify your identity.
+        </div>
+        <div class="otp-box">{{otp}}</div>
+        <div class="warning">
+          <b>Don’t share your OTP with anyone.</b> It grants access to your admin account.<br>
+          The OTP is valid for <b>5 minutes</b>; please log in before it expires.
+        </div>
+        <div class="note">
+          If you did not request this email, please ignore it or reset your password.
+        </div>
+      </div>
+      <div class="footer">
+        &copy; {{year || new Date().getFullYear()}} All That Glitters &mdash; Your security is our priority.
+      </div>
+    </div>
   </body>
 </html>
