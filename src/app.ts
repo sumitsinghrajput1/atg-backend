@@ -22,6 +22,7 @@ import couponRoutes from "./routes/coupon"
 import adminRoutes from './routes/admin'
 
 const app: Application = express();
+app.set('trust proxy', 1);
 
 const allowedOrigins = [
   "http://localhost:8080", // or 8080, depending on your dev environment
