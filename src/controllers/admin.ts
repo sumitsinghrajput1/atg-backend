@@ -73,9 +73,9 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = generateRefreshToken(admin.id);
 
   // Set cookies
-  res.cookie("accessToken", accessToken, {
+    res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "none",
     secure: process.env.NODE_ENV === "production",
    // maxAge: 150 * 60 * 1000
      maxAge: 7 * 24 * 60 * 60 * 1000
@@ -83,7 +83,7 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    sameSite: "strict", 
+    sameSite: "none", 
     secure: process.env.NODE_ENV === "production",
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
