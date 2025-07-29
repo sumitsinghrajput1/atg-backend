@@ -8,10 +8,6 @@ import { errorHandler } from "./middlewares/errorHandler";
 // import { insertAdmin } from "./utils/insertAdmin";
 
 
-// import fileUpload from "express-fileupload";
-
-
-
 //ROUTERS
 import productRoutes from "./routes/product"; 
 import categoryRoutes from "./routes/category";
@@ -22,15 +18,21 @@ import couponRoutes from "./routes/coupon"
 import adminRoutes from './routes/admin'
 
 const app: Application = express();
+
 app.set('trust proxy', 1);
 
-const allowedOrigins = [
-  "http://localhost:8080", // or 8080, depending on your dev environment
-  "https://frabjous-hummingbird-09b12e.netlify.app"
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like curl or mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -63,8 +65,8 @@ app.get("/ping", (_req, res) => {
 
 // const createInitialAdmin = async () => {
 //   const result = await insertAdmin({
-//     email: "singhsahabh704@gmail.com",
-//     password: "SecurePass123",
+//     email: "kaur.parmeet2906@gmail.com",
+//     password: "SecurePass1234",
 //     name: "Super Admin",
 //     role: "super_admin"
 //   });
