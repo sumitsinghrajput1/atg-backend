@@ -148,11 +148,103 @@ export const getFeaturedProducts = asyncHandler(async (_req, res) => {
 });
 
 // POST 
+// export const addProduct = asyncHandler(async (req: Request, res: Response) => {
+//   console.log("Body:", req.body);
+//   console.log("Files:", req.files);
+
+  
+//   const parsed = productSchema.safeParse(req.body);
+//   if (!parsed.success) {
+//      const errorMessages = parsed.error.errors.map(e => ({
+//     field: e.path.join("."),
+//     message: e.message
+//   }));
+
+//   throw new ApiError(400, "Validation Failed", errorMessages);
+//   }
+
+//   const {
+//     name,
+//     description,
+//     price,
+//     discountPrice,
+//     categoryId,
+//     tags,
+//     stock,
+//     isGiftBox = false,
+//     isReturnGift = false,
+//     isTrending = false,
+//     isBundle = false,
+//     variants,
+//     bundleItems,
+//     isfeatured = false,
+//   } = parsed.data;
+
+//   if (!req.files) {
+//     throw new ApiError(400, "No files were uploaded");
+//   }
+
+//   // Normalize req.files
+//   const filesArray = Array.isArray(req.files)
+//     ? req.files
+//     : Object.values(req.files).flat();
+
+//   const grouped: Record<string, Express.Multer.File[]> = {};
+//   for (const file of filesArray) {
+//     if (!grouped[file.fieldname]) grouped[file.fieldname] = [];
+//     grouped[file.fieldname].push(file);
+//   }
+
+//   // ✅ Check banner file count
+//   if (!grouped["banner"] || grouped["banner"].length !== 1) {
+//     throw new ApiError(400, "Exactly one banner image is required");
+//   }
+
+//   // ✅ Check image files count
+//   const imageFiles = grouped["images"] || [];
+//   if (imageFiles.length > 4) {
+//     throw new ApiError(400, "You can upload a maximum of 4 product images");
+//   }
+
+//   // Upload banner
+//   const bannerUrl = await uploadToCloudinary(grouped["banner"][0].path);
+
+//   // Upload images
+//   const imageUrls: string[] = [];
+//   for (const image of imageFiles) {
+//     const url = await uploadToCloudinary(image.path);
+//     imageUrls.push(url);
+//   }
+
+//   const newProduct = await Product.create({
+//     name,
+//     description,
+//     price,
+//     discountPrice,
+//     banner: bannerUrl,
+//     images: imageUrls,
+//     categoryId,
+//     tags,
+//     stock,
+//     isGiftBox,
+//     isReturnGift,
+//     isTrending,
+//     isBundle,
+//     variants,
+//     bundleItems,
+//     isfeatured,
+//   });
+
+//   return res
+//     .status(201)
+//     .json(new ApiResponse(201, { product: newProduct }, "Product created successfully"));
+// });
+
+// POST 
 export const addProduct = asyncHandler(async (req: Request, res: Response) => {
   console.log("Body:", req.body);
   console.log("Files:", req.files);
 
-  
   const parsed = productSchema.safeParse(req.body);
   if (!parsed.success) {
      const errorMessages = parsed.error.errors.map(e => ({
@@ -180,40 +272,44 @@ export const addProduct = asyncHandler(async (req: Request, res: Response) => {
     isfeatured = false,
   } = parsed.data;
 
-  if (!req.files) {
-    throw new ApiError(400, "No files were uploaded");
-  }
+  // ✅ Make files optional
+  let bannerUrl = "";
+  let imageUrls: string[] = [];
 
-  // Normalize req.files
-  const filesArray = Array.isArray(req.files)
-    ? req.files
-    : Object.values(req.files).flat();
+  if (req.files) {
+    // Normalize req.files
+    const filesArray = Array.isArray(req.files)
+      ? req.files
+      : Object.values(req.files).flat();
 
-  const grouped: Record<string, Express.Multer.File[]> = {};
-  for (const file of filesArray) {
-    if (!grouped[file.fieldname]) grouped[file.fieldname] = [];
-    grouped[file.fieldname].push(file);
-  }
+    const grouped: Record<string, Express.Multer.File[]> = {};
+    for (const file of filesArray) {
+      if (!grouped[file.fieldname]) grouped[file.fieldname] = [];
+      grouped[file.fieldname].push(file);
+    }
 
-  // ✅ Check banner file count
-  if (!grouped["banner"] || grouped["banner"].length !== 1) {
-    throw new ApiError(400, "Exactly one banner image is required");
-  }
+    // ✅ Check banner file count (only if banner files exist)
+    if (grouped["banner"]) {
+      if (grouped["banner"].length !== 1) {
+        throw new ApiError(400, "Exactly one banner image is required");
+      }
+      // Upload banner
+      bannerUrl = await uploadToCloudinary(grouped["banner"][0].path);
+    }
 
-  // ✅ Check image files count
-  const imageFiles = grouped["images"] || [];
-  if (imageFiles.length > 4) {
-    throw new ApiError(400, "You can upload a maximum of 4 product images");
-  }
+    // ✅ Check image files count (only if image files exist)
+    const imageFiles = grouped["images"] || [];
+    if (imageFiles.length > 4) {
+      throw new ApiError(400, "You can upload a maximum of 4 product images");
+    }
 
-  // Upload banner
-  const bannerUrl = await uploadToCloudinary(grouped["banner"][0].path);
-
-  // Upload images
-  const imageUrls: string[] = [];
-  for (const image of imageFiles) {
-    const url = await uploadToCloudinary(image.path);
-    imageUrls.push(url);
+    // Upload images
+    if (imageFiles.length > 0) {
+      for (const image of imageFiles) {
+        const url = await uploadToCloudinary(image.path);
+        imageUrls.push(url);
+      }
+    }
   }
 
   const newProduct = await Product.create({
@@ -239,6 +335,7 @@ export const addProduct = asyncHandler(async (req: Request, res: Response) => {
     .status(201)
     .json(new ApiResponse(201, { product: newProduct }, "Product created successfully"));
 });
+
 
 
 // PUT /api/products/:id
