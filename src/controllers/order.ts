@@ -14,14 +14,23 @@ export const placeOrder = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
   const { items, address, couponCode, paymentStatus, paymentId } = req.body;
   
-
   if (!items || !items.length) throw new ApiError(400, "No items provided");
-
-
-
 
   let totalAmount = 0;
   const validatedItems = [];
+
+  // Helper function to find variant in product
+  const findVariant = (product: any, variantInfo: { color?: string; size?: string }) => {
+    if (!product.variants || !product.variants.length || !variantInfo) {
+      return null;
+    }
+    
+    return product.variants.find((variant: any) => {
+      const colorMatch = !variantInfo.color || variant.color === variantInfo.color;
+      const sizeMatch = !variantInfo.size || variant.size === variantInfo.size;
+      return colorMatch && sizeMatch;
+    });
+  };
 
   for (const item of items) {
     const qty = Number(item.quantity);
@@ -31,61 +40,97 @@ export const placeOrder = asyncHandler(async (req: Request, res: Response) => {
 
     const product = await Product.findById(item.productId);
 
-
-    if (
-      !product ||
-      !product.isAvailable ||
-      product.stock == null ||
-      product.stock <= 0 ||
-      product.price == null ||
-      product.price <= 0
-    ) {
-      throw new ApiError(400, `Out of stock or unavailable: ${item.productId}`);
+    if (!product || !product.isAvailable || product.price == null || product.price <= 0) {
+      throw new ApiError(400, `Product unavailable: ${item.productId}`);
     }
 
-
-    console.log("stock", product.stock, item.quantity)
-    if (product.stock < qty) {
-      throw new ApiError(400, `Insufficient stock for ${product.name}`);
+    // ✅ Check variant stock if variant is provided
+    if (item.variant) {
+      const selectedVariant = findVariant(product, item.variant);
+      
+      if (!selectedVariant) {
+        throw new ApiError(400, `Variant not found for product: ${product.name}`);
+      }
+      
+      if (selectedVariant.stock == null || selectedVariant.stock <= 0) {
+        throw new ApiError(400, `Variant out of stock for ${product.name}`);
+      }
+      
+      if (selectedVariant.stock < qty) {
+        throw new ApiError(400, `Insufficient variant stock for ${product.name}`);
+      }
+    } else {
+      // ✅ Check main product stock if no variant
+      if (product.stock == null || product.stock <= 0) {
+        throw new ApiError(400, `Out of stock: ${product.name}`);
+      }
+      
+      if (product.stock < qty) {
+        throw new ApiError(400, `Insufficient stock for ${product.name}`);
+      }
     }
 
-    // 🛒 If it's a bundle, validate stock of bundled items too
+    // ✅ If it's a bundle, validate stock of bundled items too
     if (product.isBundle && product.bundleItems?.length) {
       for (const bundleItem of product.bundleItems) {
         const subProduct = await Product.findById(bundleItem.productId);
         const requiredQty = bundleItem.quantity * qty;
 
-        if (
-          !subProduct ||
-          subProduct.stock == null ||
-          subProduct.stock < requiredQty
-        ) {
-          throw new ApiError(
-            400,
-            `Insufficient stock for bundle item: ${subProduct?.name || "Unknown"}`
+        if (!subProduct) {
+          throw new ApiError(400, `Bundle item not found`);
+        }
+
+        // Check bundle item variant stock if specified
+        if (item.bundleItems) {
+          const bundleItemData = item.bundleItems.find(
+            (bi: any) => bi.productId.toString() === bundleItem.productId.toString()
           );
+          
+          if (bundleItemData?.variant) {
+            const selectedVariant = findVariant(subProduct, bundleItemData.variant);
+            
+            if (!selectedVariant) {
+              throw new ApiError(400, `Bundle item variant not found: ${subProduct.name}`);
+            }
+            
+            if (selectedVariant.stock < requiredQty) {
+              throw new ApiError(400, `Insufficient variant stock for bundle item: ${subProduct.name}`);
+            }
+          } else {
+            // Check main stock for bundle item
+            if (subProduct.stock == null || subProduct.stock < requiredQty) {
+              throw new ApiError(400, `Insufficient stock for bundle item: ${subProduct.name}`);
+            }
+          }
+        } else {
+          // Default: check main stock
+          if (subProduct.stock == null || subProduct.stock < requiredQty) {
+            throw new ApiError(400, `Insufficient stock for bundle item: ${subProduct.name}`);
+          }
         }
       }
     }
+
     const itemTotal = product.price * qty;
     totalAmount += itemTotal;
-
 
     validatedItems.push({
       productId: product._id,
       quantity: qty,
       price: product.price,
+      variant: item.variant || undefined,
+      isBundle: product.isBundle,
+      bundleItems: product.isBundle ? (item.bundleItems || product.bundleItems) : undefined,
     });
   }
 
-  // 🧾 Coupon logic
+  // 🧾 Coupon logic (unchanged)
   let discount = 0;
   let appliedCoupon = null;
 
   if (couponCode) {
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
     const now = new Date();
-
 
     if (
       !coupon ||
@@ -109,9 +154,7 @@ export const placeOrder = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const finalAmount = Math.max(totalAmount - discount, 0);
-
-    const orderId = await getNextOrderId();
-console.log("oderID" , orderId)
+  const orderId = await getNextOrderId();
 
   // ✅ Create order
   const order = await Order.create({
@@ -129,34 +172,55 @@ console.log("oderID" , orderId)
   });
 
   if (order) {
-
     // ⬇️ Decrease stock of each product (and bundle items)
     for (const item of items) {
       const product = await Product.findById(item.productId);
 
       if (product) {
         const qty = Number(item.quantity);
+        
         if (!isNaN(qty)) {
-          product.stock -= qty;
-          await product.save();
-        } else {
-          console.warn(`Invalid quantity for product ${item.productId}:`, item.quantity);
+          // ✅ Deduct from variant stock if variant is specified
+          if (item.variant) {
+            const selectedVariant = findVariant(product, item.variant);
+            if (selectedVariant) {
+              selectedVariant.stock -= qty;
+              await product.save(); // This saves the entire product including variants
+            }
+          } else {
+            // ✅ Deduct from main product stock
+            product.stock -= qty;
+            await product.save();
+          }
         }
 
+        // ✅ Handle bundle items stock deduction
         if (product.isBundle && product.bundleItems?.length) {
           for (const bundleItem of product.bundleItems) {
             const subProduct = await Product.findById(bundleItem.productId);
             const subQty = Number(bundleItem.quantity) * qty;
 
             if (subProduct && !isNaN(subQty)) {
-              subProduct.stock -= subQty;
-              await subProduct.save();
+              // Check if bundle item has variant specified
+              const bundleItemData = item.bundleItems?.find(
+                (bi: any) => bi.productId.toString() === bundleItem.productId.toString()
+              );
+
+              if (bundleItemData?.variant) {
+                const selectedVariant = findVariant(subProduct, bundleItemData.variant);
+                if (selectedVariant) {
+                  selectedVariant.stock -= subQty;
+                  await subProduct.save();
+                }
+              } else {
+                subProduct.stock -= subQty;
+                await subProduct.save();
+              }
             }
           }
         }
       }
     }
-
 
     // ⬆️ Update coupon used count
     if (appliedCoupon) {
@@ -169,6 +233,7 @@ console.log("oderID" , orderId)
     .status(201)
     .json(new ApiResponse(201, { order }, "Order placed successfully"));
 });
+
 
 
 // 2. Get Order by ID
