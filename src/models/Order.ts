@@ -5,9 +5,17 @@ export interface OrderItem {
   quantity: number;
   price: number;
   isBundle?: boolean;
+  variant?: {
+    color?: string;
+    size?: string;
+  };
   bundleItems?: {
     productId: Types.ObjectId;
     quantity: number;
+    variant?: {
+      color?: string;
+      size?: string;
+    };
   }[];
 }
 
@@ -39,9 +47,19 @@ const orderItemSchema = new Schema<OrderItem>({
   quantity: Number,
   price: Number,
   isBundle: Boolean,
+  variant: {
+    color: String,
+    size: String
+  },
+
   bundleItems: [{
     productId: { type: Schema.Types.ObjectId, ref: "Product" },
-    quantity: Number
+    quantity: Number,
+    variant: {
+      color: String,
+      size: String
+    }
+
   }]
 }, { _id: false });
 
@@ -55,7 +73,7 @@ const addressSchema = new Schema<Address>({
 }, { _id: false });
 
 const orderSchema = new Schema<IOrder>({
- orderId: {
+  orderId: {
     type: String,
     required: true,
     unique: true
