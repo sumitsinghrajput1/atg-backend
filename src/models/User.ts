@@ -17,6 +17,8 @@ export interface IUser extends Document {
   phone?: string;
   isVerified: boolean;
   addresses: Address[];
+  createdAt?:String;
+  updatedAt?: String;
 }
 
 const addressSchema = new Schema<Address>({

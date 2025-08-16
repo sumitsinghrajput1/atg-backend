@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Admin } from "../models/Admin"
-import { sendOtpEmail } from "../services/email/sendOtpEmail";
+import { sendAdminOtpEmail } from "../services/email/sendOtpEmail";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
 import { ApiError } from "../utils/ApiError";
@@ -32,7 +32,7 @@ export const loginWithEmail = asyncHandler(async (req: Request, res: Response) =
   };
   await admin.save();
 
-  await sendOtpEmail({ 
+  await sendAdminOtpEmail({ 
     toEmail: admin.email, 
     toName: admin.name,
     otp: otp 
@@ -75,16 +75,16 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   // Set cookies
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    secure: process.env.NODE_ENV === "development",
    // maxAge: 150 * 60 * 1000
      maxAge: 7 * 24 * 60 * 60 * 1000
   });
   
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    sameSite: "strict", 
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "none", 
+    secure: process.env.NODE_ENV === "development",
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
@@ -169,7 +169,7 @@ export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
   };
   await admin.save();
 
-  await sendOtpEmail({ 
+  await sendAdminOtpEmail({ 
     toEmail: admin.email, 
     toName: admin.name,
     otp: otp 

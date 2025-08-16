@@ -5,11 +5,12 @@ import { generateToken } from "../utils/jwt";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
-import {  loginSchema } from "../validators/user.schema";
+import { loginSchema } from "../validators/user.schema";
 import { ParsedQs } from "qs";
 
 
-import { sendOtpEmail } from '../services/email/sendOtpEmail';
+import { sendUserOtpEmail } from '../services/email/sendOtpEmail'
+
 import { Otp } from '../models/Otp';
 
 export const sendOtp = asyncHandler(async (req: Request, res: Response) => {
@@ -37,7 +38,7 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response) => {
     existingOtp.lastSentAt = new Date();
     await existingOtp.save();
 
-    await sendOtpEmail({ toEmail: email, toName: name, otp: existingOtp.otp });
+    await sendUserOtpEmail({ toEmail: email, toName: name, otp: existingOtp.otp });
     return res.status(200).json(new ApiResponse(200, {}, "OTP resent"));
   }
 
@@ -51,7 +52,7 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response) => {
     lastSentAt: new Date(),
   });
 
-  await sendOtpEmail({ toEmail: email, toName: name, otp });
+  await sendUserOtpEmail({ toEmail: email, toName: name, otp });
   return res.status(200).json(new ApiResponse(200, {}, "OTP sent to email"));
 });
 
@@ -80,13 +81,27 @@ export const verifyOtpAndRegister = asyncHandler(async (req: Request, res: Respo
     name,
     email,
     password: hashedPassword,
-    isVerified: true, // ✅ Mark verified
+    isVerified: true, //  Mark verified
   });
 
   await Otp.deleteOne({ email });
 
   const token = generateToken(user._id.toString());
-  return res.status(201).json(new ApiResponse(201, { token, user }, "User registered"));
+
+  const userResponse = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    isVerified: user.isVerified,
+    addresses: user.addresses,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    __v: user.__v
+  };
+
+
+
+  return res.status(201).json(new ApiResponse(201, { token, userResponse }, "User registered"));
 });
 
 export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
@@ -112,7 +127,7 @@ export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
     existingOtp.attempts += 1;
     await existingOtp.save();
 
-    await sendOtpEmail({ toEmail: email, toName: "User", otp: existingOtp.otp });
+    await sendUserOtpEmail({ toEmail: email, toName: "User", otp: existingOtp.otp });
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP resent successfully"));
   }
@@ -128,7 +143,7 @@ export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
     lastSentAt: new Date(),
   });
 
-  await sendOtpEmail({ toEmail: email, toName: "User", otp });
+  await sendUserOtpEmail({ toEmail: email, toName: "User", otp });
 
   return res.status(200).json(new ApiResponse(200, {}, "OTP sent successfully"));
 });
@@ -144,7 +159,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findOne({ email }).select("+password");
   if (!user) throw new ApiError(401, "Invalid credentials");
 
-  // ✅ Check verification status
+  // Check verification status
   if (!user.isVerified) {
     throw new ApiError(403, "Please verify your email before logging in.");
   }
@@ -153,7 +168,20 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   if (!isMatch) throw new ApiError(401, "Invalid credentials");
 
   const token = generateToken(user._id.toString());
-  return res.status(200).json(new ApiResponse(200, { token, user }, "Login successful"));
+
+  const userResponse = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    isVerified: user.isVerified,
+    addresses: user.addresses,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    __v: user.__v
+  };
+
+  return res.status(200).json(new ApiResponse(200, { token, userResponse }, "Login successful"));
 });
 
 
@@ -161,10 +189,10 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user?.userId;
-  
+
   const { phone, addresses } = req.body;
 
-  console.log("userid" , userId)
+  console.log("userid", userId)
 
   const user = await User.findById(userId);
   if (!user) throw new ApiError(404, "User not found");
@@ -174,8 +202,62 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  return res.status(200).json(new ApiResponse(200, { user }, "Profile updated"));
+  const userResponse = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    isVerified: user.isVerified,
+    addresses: user.addresses,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    __v: user.__v
+  };
+
+  return res.status(200).json(new ApiResponse(200, { userResponse }, "Profile updated"));
 });
+
+
+// Add this to your existing user controller file
+
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    throw new ApiError(401, "User ID not found in token");
+  }
+
+  // Find user without password (due to select: false in schema)
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Check if user is still verified (in case admin blocked them)
+  if (!user.isVerified) {
+    throw new ApiError(403, "Account has been suspended. Please contact support.");
+  }
+
+  const userResponse = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    isVerified: user.isVerified,
+    addresses: user.addresses,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    __v: user.__v
+  };
+
+
+
+  return res.status(200).json(
+    new ApiResponse(200, { userResponse }, "User profile fetched successfully")
+  );
+});
+
 
 
 // Helper functions for type safety
@@ -211,7 +293,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const searchQuery: SearchQuery = {};
-  
+
   // Search in name, email, phone
   if (search) {
     searchQuery.$or = [

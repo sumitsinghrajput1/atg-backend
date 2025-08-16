@@ -6,7 +6,9 @@ import {
   requestCancelOrder,
   getAllOrders,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
+  verifyAndCreateOrder
+  
 } from "../controllers/order";
 import { isLoggedIn } from "../middlewares/auth";
 
@@ -17,7 +19,10 @@ import { requireAdmin } from "../middlewares/adminAuth";
 const router = express.Router();
 
 //  User routes
-router.post("/", isLoggedIn , placeOrder);
+// router.post("/", isLoggedIn , placeOrder);
+router.post('/verify', isLoggedIn, verifyAndCreateOrder);
+
+
 router.get("/me", isLoggedIn, getMyOrders);
 router.get("/:id",requireAdmin,  getOrderById);
 router.put("/:id/cancel", isLoggedIn, requestCancelOrder);

@@ -37,7 +37,6 @@ export const addToCart = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
-
 export const removeFromCart = asyncHandler(async (req: Request, res: Response) => {
   const { productId } = req.body;
   const userId = req.user?._id;

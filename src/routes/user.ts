@@ -8,7 +8,8 @@ import {
   blockUser,
   sendOtp , 
   verifyOtpAndRegister,
-  resendOtp 
+  resendOtp, 
+  getCurrentUser
 } from "../controllers/user";
 
 
@@ -24,11 +25,15 @@ router.post("/resend-otp", resendOtp);
 
 
 router.post("/login", loginUser);
+
+router.get("/me", isLoggedIn, getCurrentUser); 
+
 router.put("/profile", isLoggedIn, updateUserProfile);
 
+  
 // Admin routes (protect with middleware later)
-router.get("/",  getAllUsers);
-router.get("/:id", getUserById);
-router.put("/:id/block", blockUser);
+router.get("/", isAdmin,  getAllUsers);
+router.get("/:id",isAdmin, getUserById);
+router.put("/:id/block",isAdmin,  blockUser);
 
 export default router;

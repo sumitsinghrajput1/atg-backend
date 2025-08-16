@@ -8,10 +8,6 @@ import { errorHandler } from "./middlewares/errorHandler";
 // import { insertAdmin } from "./utils/insertAdmin";
 
 
-// import fileUpload from "express-fileupload";
-
-
-
 //ROUTERS
 import productRoutes from "./routes/product"; 
 import categoryRoutes from "./routes/category";
@@ -20,11 +16,25 @@ import tagRoutes from "./routes/tag";
 import orderRoutes from "./routes/order"
 import couponRoutes from "./routes/coupon"
 import adminRoutes from './routes/admin'
+import payemntsRoutes from './routes/payment'
+import webhookRoutes from './routes/webhook'
 
 const app: Application = express();
 
+app.set('trust proxy', 1);
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+
 app.use(cors({
-  origin: ["http://localhost:8080", "https://timely-syrniki-551af0.netlify.app"], // ✅ Correct way
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like curl or mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -47,7 +57,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/coupons" , couponRoutes)
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments' , payemntsRoutes)
+app.use('/api/webhook' , webhookRoutes)
 app.use('/api/admin' , adminRoutes);
+
 
 
 
@@ -57,8 +70,8 @@ app.get("/ping", (_req, res) => {
 
 // const createInitialAdmin = async () => {
 //   const result = await insertAdmin({
-//     email: "singhsahabh704@gmail.com",
-//     password: "SecurePass123",
+//     email: "kaur.parmeet2906@gmail.com",
+//     password: "SecurePass1234",
 //     name: "Super Admin",
 //     role: "super_admin"
 //   });

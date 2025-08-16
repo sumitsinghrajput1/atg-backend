@@ -18,4 +18,5 @@ router.delete("/:id", requireAdmin, deleteCoupon);
 router.get("/", requireAdmin, getAllCoupons);
 router.get("/:id", requireAdmin, getCouponById);
 
+
 export default router;

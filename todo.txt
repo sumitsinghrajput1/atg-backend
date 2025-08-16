@@ -36,3 +36,20 @@ TODO: 1. validation and testing deep and cache. one whole day
 
 local-user
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODdlNzMyY2FkNWExYjNiMDViMDZmZjkiLCJpYXQiOjE3NTMxMTc0ODQsImV4cCI6MTc1MzcyMjI4NH0.FvcZHYhssMbKWhxpkAuYY3Is6IcxgqGUGCMnD1C6LxU
+girls Accessories in a landscape with pinkish bg
+
+
+
+- user profile --> my orders , loginn and singup pages --> 2 hours order ke time login krao user ko...(phone number better options hai) -->done
+- cart and order fixes --> 3-4 hours ---> done
+- header fotter and other ui parts  --> 2 hours  -->done
+- 404 page
+
+
+lefting
+- voucher and sales 
+
+later final 
+- toasts 
+- data trims in the apis dont send the pricvate data
+-icons huge icons use
