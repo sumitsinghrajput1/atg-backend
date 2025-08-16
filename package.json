@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
+
     "postbuild": "cpx src/services/email/otp-email.html dist/services/email/ && cpx src/services/email/user-otp-email.html dist/services/email/",
+
     "start": "node dist/server.js"
   },
   "author": "",
